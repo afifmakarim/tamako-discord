@@ -9,10 +9,26 @@ import { id_to_HeroName, id_to_LobbyType } from './utils/dota-helper';
 import { getRequest, getSteamId } from './utils/steam-helper';
 const { DefaultExtractors } = require('@discord-player/extractor');
 
-// prerequisite to host in repl.it
+import fs = require('fs');
+import path = require('path');
+
+// serve static site on port 8080
 http.createServer(function (req, res) {
-  res.write("I'm alive");
-  res.end();
+  if (req.url === '/' || req.url === '/index.html') {
+    const filePath = path.join(__dirname, '../public/index.html');
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end("Not found");
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+    });
+  } else {
+    res.writeHead(404);
+    res.end("Not found");
+  }
 }).listen(process.env.PORT || 8080);
 
 const client = new Client({

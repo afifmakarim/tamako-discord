@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamako Bot - Your Cozy Discord Assistant</title>
+    <style>
+        :root {
+            /* Tamako Market Color Palette (Light) */
+            --primary: #FFB6C1;
+            --primary-hover: #FF9EAB;
+            --secondary: #E0F7FA;
+            --accent: #FFECB3;
+            --text-dark: #5D4037;
+            --background: #FFFBF0;
+            --white: #FFFFFF;
+            --header-bg: linear-gradient(135deg, rgba(255, 182, 193, 0.8), rgba(224, 247, 250, 0.8));
+            --hero-bg: rgba(255, 255, 255, 0.9);
+            --card-shadow: rgba(93, 64, 55, 0.1);
+            --card-shadow-hover: rgba(93, 64, 55, 0.15);
+            --desc-text: #6D4C41;
+            --footer-text: #8D6E63;
+        }
+
+        [data-theme="dark"] {
+            /* Tamako Market Color Palette (Dark) */
+            --primary: #D48B9B;
+            --primary-hover: #E89EAE;
+            --secondary: #243447;
+            --accent: #FFD54F;
+            --text-dark: #F5F5F5;
+            --background: #15202B;
+            --white: #1E2732;
+            --header-bg: linear-gradient(135deg, rgba(212, 139, 155, 0.8), rgba(36, 52, 71, 0.8));
+            --hero-bg: rgba(30, 39, 50, 0.9);
+            --card-shadow: rgba(0, 0, 0, 0.3);
+            --card-shadow-hover: rgba(0, 0, 0, 0.5);
+            --desc-text: #B0BEC5;
+            --footer-text: #78909C;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            background-image: radial-gradient(var(--primary) 1px, transparent 1px), radial-gradient(var(--secondary) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 2rem;
+            text-align: center;
+            background: var(--header-bg);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-bottom: 3px solid var(--white);
+            position: relative;
+        }
+
+        .theme-switch {
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--text-dark);
+            transition: transform 0.3s ease;
+        }
+
+        .theme-switch:hover {
+            transform: translateY(-50%) scale(1.1) rotate(15deg);
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .hero-card {
+            background: var(--hero-bg);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 10px 30px var(--card-shadow);
+            border: 2px solid var(--white);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .hero-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px var(--card-shadow-hover);
+        }
+
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 6px solid var(--primary);
+            box-shadow: 0 8px 16px rgba(255, 182, 193, 0.4);
+            margin-bottom: 1.5rem;
+            object-fit: cover;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        p.description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: var(--desc-text);
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: var(--primary);
+            color: var(--white);
+            font-weight: 600;
+            font-size: 1.2rem;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.5);
+            border: 2px solid transparent;
+        }
+
+        .cta-button:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 182, 193, 0.6);
+        }
+
+        .features {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .feature-item {
+            background: var(--accent);
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--footer-text);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="header">
+        <h2 style="margin: 0; color: var(--text-dark);">Tamako Bot Discord Integration</h2>
+        <button class="theme-switch" id="theme-btn" aria-label="Toggle Dark Mode"
+            title="Toggle Dark/Light Mode">🌙</button>
+    </div>
+
+    <div class="container">
+        <div class="hero-card">
+            <!-- Tamako avatar -->
+            <img src="https://i.pinimg.com/736x/10/f4/75/10f475b938c8e885cec9584817b55ea7.jpg" alt="Tamako Bot"
+                class="avatar">
+
+            <h1>Tamako Bot</h1>
+            <p class="description">
+                Your cheerful and warm server assistant, developed using the Gemini AI model. Bringing a soft, friendly,
+                and cozy atmosphere to your community.
+            </p>
+
+            <!-- Please add your client ID to the href link later! -->
+            <a href="https://discord.com/oauth2/authorize?client_id=527171107204366337" class="cta-button"
+                target="_blank">
+                Add to Discord
+            </a>
+
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Tamako Bot. Created by Rojokundo.</p>
+    </footer>
+
+    <script>
+        const themeBtn = document.getElementById('theme-btn');
+        // Check for saved user preference or fallback to system preference
+        const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeBtn.textContent = '☀️';
+        }
+
+        themeBtn.addEventListener('click', () => {
+            let theme = document.documentElement.getAttribute('data-theme');
+            if (theme === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeBtn.textContent = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeBtn.textContent = '☀️';
+            }
+        });
+    </script>
+</body>
+
+</html>
