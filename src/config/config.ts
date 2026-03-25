@@ -9,5 +9,6 @@ export const CONFIG = {
   WEATHER_API_KEY: process.env.WEATHER_API_KEY || '',
   STEAM_API_BASE_URL: process.env.STEAM_API_BASE_URL || 'https://api.steampowered.com',
   WEATHER_API_BASE_URL: process.env.WEATHER_API_BASE_URL || 'http://api.openweathermap.org/data/2.5',
-  ENABLE_MUSIC_PLAYER: process.env.ENABLE_MUSIC_PLAYER === 'true'
+  ENABLE_MUSIC_PLAYER: process.env.ENABLE_MUSIC_PLAYER === 'true',
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || ''
 };

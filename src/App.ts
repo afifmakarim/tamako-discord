@@ -3,11 +3,10 @@ import request = require('request');
 import http = require('http');
 import { Client, GatewayIntentBits, EmbedBuilder, Message } from 'discord.js';
 import { Player, QueryType } from 'discord-player';
-
+import { GoogleGenAI } from '@google/genai';
 import { CONFIG } from './config/config';
 import { id_to_HeroName, id_to_LobbyType } from './utils/dota-helper';
 import { getRequest, getSteamId } from './utils/steam-helper';
-import { SpotifyExtractor } from "discord-player-spotify";
 const { DefaultExtractors } = require('@discord-player/extractor');
 
 // prerequisite to host in repl.it
@@ -25,6 +24,7 @@ const client = new Client({
   ]
 });
 
+const ai = new GoogleGenAI({ apiKey: CONFIG.GEMINI_API_KEY });
 const player: Player | undefined = CONFIG.ENABLE_MUSIC_PLAYER ? new Player(client) : undefined;
 
 if (player) {
@@ -50,8 +50,46 @@ client.on('ready', async () => {
   }
 });
 
-client.on('messageCreate', (receivedMessage: Message) => {
+client.on('messageCreate', async (receivedMessage: Message) => {
   if (receivedMessage.author.bot) {
+    return;
+  }
+
+  if (client.user && receivedMessage.mentions.users.has(client.user.id)) {
+    let prompt = receivedMessage.content.replace(new RegExp(`<@!?${client.user.id}>`, 'g'), '').trim();
+    
+    if (receivedMessage.reference && receivedMessage.reference.messageId) {
+      try {
+        const repliedMessage = await receivedMessage.channel.messages.fetch(receivedMessage.reference.messageId);
+        const contextText = `${repliedMessage.author.username} said: "${repliedMessage.content}"`;
+        prompt = `Context (user is replying to this message):\n${contextText}\n\nUser's reply: ${prompt || '(just mentioned you)'}`;
+      } catch (err) {
+        console.error("Failed to fetch referenced message", err);
+      }
+    }
+
+    if (prompt) {
+      try {
+        await receivedMessage.channel.sendTyping();
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+          config: {
+            systemInstruction: `Tamako Kitashirakawa is your cheerful and warm server assistant, developed by Rojokundo using gemini AI model. Inspired by Tamako Kitashirakawa, she brings a soft, friendly, and slightly airheaded personality into every interaction. She speaks in a casual and gentle tone, often using small expressions like “hmm…” or “oh!” as she thinks, and always tries to make users feel comfortable and supported. While she may seem a little forgetful or easily distracted at times, she is sincere, kind, and genuinely cares about helping others. Tamako prefers explaining things in a simple and approachable way rather than using overly technical language, but she still aims to give accurate and helpful answers. She treats users like friends or neighbors, adding a touch of warmth and encouragement to every response, creating a welcoming and cozy atmosphere in your server.`
+          }
+        });
+        const replyText = response.text || "I'm sorry, I don't know what to say.";
+
+        if (replyText.length > 2000) {
+          await receivedMessage.reply(replyText.substring(0, 1997) + '...');
+        } else {
+          await receivedMessage.reply(replyText);
+        }
+      } catch (error) {
+        console.error("Gemini API error:", error);
+        await receivedMessage.reply("I'm sorry, an error occurred while generating a response.");
+      }
+    }
     return;
   }
 
