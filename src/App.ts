@@ -31,7 +31,7 @@ http.createServer(function (req, res) {
     res.writeHead(404);
     res.end("Not found");
   }
-}).listen(process.env.PORT || 8080);
+}).listen(parseInt(process.env.PORT ?? '8080', 10));
 
 const client = new Client({
   intents: [
