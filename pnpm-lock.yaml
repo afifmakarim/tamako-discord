@@ -26,6 +26,9 @@ importers:
       discord-player:
         specifier: ^7.2.0
         version: 7.2.0(@discord-player/extractor@7.2.0)(mediaplex@1.0.0)
+      discord-player-soundcloud:
+        specifier: ^1.0.7
+        version: 1.0.7
       discord-player-spotify:
         specifier: ^1.1.7
         version: 1.1.7
@@ -997,6 +1000,9 @@ packages:
   discord-api-types@0.38.42:
     resolution: {integrity: sha512-qs1kya7S84r5RR8m9kgttywGrmmoHaRifU1askAoi+wkoSefLpZP6aGXusjNw5b0jD3zOg3LTwUa3Tf2iHIceQ==}
 
+  discord-player-soundcloud@1.0.7:
+    resolution: {integrity: sha512-LWXoW/BXPa0lr4nd8NMLIQynbfWTiWLKYhd8ranif5ji1SPdynq7U5ogCR+14jHPmn0VJyx4DAwbi8XrW9yMlA==}
+
   discord-player-spotify@1.1.7:
     resolution: {integrity: sha512-Hw86G2RRq5BeaA/S3Ukm1RYKIIBmrvAyQ4vQ0zTDGhHDQ8oa0IAeAvi/wkqRxvlc7mBEp+N2eAlrvMXQV5hRYw==}
 
@@ -1878,6 +1884,9 @@ packages:
 
   soundcloud.ts@0.5.5:
     resolution: {integrity: sha512-bygjhC1w/w26Nk0Y+4D4cWSEJ1TdxLaE6+w4pCazFzPF+J4mzuB62ggWmFa7BiwnirzNf9lgPbjzrQYGege4Ew==}
+
+  soundcloud.ts@0.6.9:
+    resolution: {integrity: sha512-mOUpdtNFPhoz8xwoEQMLY/W6VQeXhAeoWEwaMVZozhb0qKX1IfWcXKr2LyxoDpZgOUovIb+gOx9wHQNj1YcO3w==}
 
   source-map@0.7.6:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
@@ -2986,6 +2995,10 @@ snapshots:
 
   discord-api-types@0.38.42: {}
 
+  discord-player-soundcloud@1.0.7:
+    dependencies:
+      soundcloud.ts: 0.6.9
+
   discord-player-spotify@1.1.7:
     dependencies:
       node-html-parser: 7.1.0
@@ -3913,6 +3926,8 @@ snapshots:
   soundcloud.ts@0.5.5:
     dependencies:
       undici: 6.24.1
+
+  soundcloud.ts@0.6.9: {}
 
   source-map@0.7.6: {}
 

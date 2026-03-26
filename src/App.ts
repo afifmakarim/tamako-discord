@@ -1,13 +1,15 @@
-import moment = require('moment');
-import request = require('request');
-import http = require('http');
-import { Client, GatewayIntentBits, EmbedBuilder, Message } from 'discord.js';
-import { Player, QueryType } from 'discord-player';
+import moment from 'moment'
+import request from 'request'
+import http from 'http'
+import { Client, GatewayIntentBits, EmbedBuilder, Message, TextChannel } from 'discord.js';
+import { Player } from 'discord-player';
 import { GoogleGenAI } from '@google/genai';
 import { CONFIG } from './config/config';
 import { id_to_HeroName, id_to_LobbyType } from './utils/dota-helper';
 import { getRequest, getSteamId } from './utils/steam-helper';
-const { DefaultExtractors } = require('@discord-player/extractor');
+import { playCommand, skipCommand, stopCommand, queueCommand } from './features/music-player';
+import { SoundcloudExtractor } from "discord-player-soundcloud";
+import { DefaultExtractors } from '@discord-player/extractor';
 
 import fs = require('fs');
 import path = require('path');
@@ -59,7 +61,9 @@ client.on('ready', async () => {
     client.user.setActivity(".help");
   }
   if (player) {
+    await player.extractors.register(SoundcloudExtractor, {});
     await player.extractors.loadMulti(DefaultExtractors);
+
     console.log('Bot is ready and discord-player extractors loaded!');
   } else {
     console.log('Bot is ready (Music Player Disabled by Feature Flag)');
@@ -73,7 +77,7 @@ client.on('messageCreate', async (receivedMessage: Message) => {
 
   if (client.user && receivedMessage.mentions.users.has(client.user.id)) {
     let prompt = receivedMessage.content.replace(new RegExp(`<@!?${client.user.id}>`, 'g'), '').trim();
-    
+
     if (receivedMessage.reference && receivedMessage.reference.messageId) {
       try {
         const repliedMessage = await receivedMessage.channel.messages.fetch(receivedMessage.reference.messageId);
@@ -86,7 +90,7 @@ client.on('messageCreate', async (receivedMessage: Message) => {
 
     if (prompt) {
       try {
-        await receivedMessage.channel.sendTyping();
+        await (receivedMessage.channel as TextChannel).sendTyping();
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash',
           contents: prompt,
@@ -134,11 +138,13 @@ const processCommand = (receivedMessage: Message) => {
   } else if (primaryCommand === "dota") {
     dotaCommand(args, receivedMessage);
   } else if (primaryCommand === "play") {
-    playCommand(args, receivedMessage);
+    playCommand(player, args, receivedMessage);
   } else if (primaryCommand === "skip") {
-    skipCommand(receivedMessage);
+    skipCommand(player, receivedMessage);
   } else if (primaryCommand === "stop") {
-    stopCommand(receivedMessage);
+    stopCommand(player, receivedMessage);
+  } else if (primaryCommand === "queue") {
+    queueCommand(player, receivedMessage);
   }
 };
 
@@ -153,11 +159,11 @@ const helloCommand = (fullString: string, receivedMessage: Message) => {
         { name: "Write", value: "Overlay text into image.\nex: .write [text]" },
         { name: "Steam", value: "Your steam profile information.\nex: .steam [url username]" },
         { name: "Dota", value: "Your dota 2 information\nex: .dota [url username]" },
-        { name: "Music", value: "Play music!\nex: .play [song]\n.skip\n.stop" }
+        { name: "Music", value: "Play music!\nex: .play [song]\n.skip\n.stop\n.queue" }
       )
       .setImage("http://moarpowah.com/wp-content/uploads/2013/04/Tamako-with-glasses.jpg")
       .setTimestamp();
-    receivedMessage.channel.send({ embeds: [embed.toJSON() as any] });
+    (receivedMessage.channel as TextChannel).send({ embeds: [embed.toJSON() as any] });
   }
 };
 
@@ -171,22 +177,22 @@ const weatherCommand = (args: string[], receivedMessage: Message) => {
       try {
         const weathers = JSON.parse(body);
         if (weathers.name == null) {
-          receivedMessage.channel.send(city + " not found");
+          (receivedMessage.channel as TextChannel).send(city + " not found");
         } else {
           const iconcode = weathers.weather[0].icon;
           const message = `It's ${weathers.weather[0].description} and ${weathers.main.temp}°C in ${weathers.name}, ${weathers.sys.country}!`;
-          receivedMessage.channel.send({
+          (receivedMessage.channel as TextChannel).send({
             content: message,
             files: ["http://openweathermap.org/img/w/" + iconcode + ".png"]
           });
           console.log(message);
         }
       } catch (e) {
-        receivedMessage.channel.send("Error fetching weather.");
+        (receivedMessage.channel as TextChannel).send("Error fetching weather.");
       }
     });
   } else {
-    receivedMessage.channel.send("Try `.weather [city name]`");
+    (receivedMessage.channel as TextChannel).send("Try `.weather [city name]`");
   }
 };
 
@@ -194,13 +200,13 @@ const writeCommand = (fullString: string, receivedMessage: Message) => {
   if (fullString.length >= 8) {
     const tulisan = encodeURIComponent(fullString);
     const gambarS = "https://res.cloudinary.com/dftovjqdo/image/upload/a_-27,g_west,l_text:dark_name:" + tulisan + ",w_450,x_280,y_100/anime_notebook_yhekwa.jpg";
-    receivedMessage.channel.send({ files: [gambarS] });
+    (receivedMessage.channel as TextChannel).send({ files: [gambarS] });
   } else if (fullString.length > 0 && fullString.length < 8) {
     const tulisan = encodeURIComponent(fullString);
     const gambarL = "https://res.cloudinary.com/dftovjqdo/image/upload/a_-27,g_west,l_text:dark_name:" + tulisan + ",w_200,x_250,y_100/anime_notebook_yhekwa.jpg";
-    receivedMessage.channel.send({ files: [gambarL] });
+    (receivedMessage.channel as TextChannel).send({ files: [gambarL] });
   } else {
-    receivedMessage.channel.send("Try `.write [your text]`");
+    (receivedMessage.channel as TextChannel).send("Try `.write [your text]`");
   }
 };
 
@@ -230,7 +236,7 @@ const steamCommand = (args: string[], receivedMessage: Message) => {
           embed.setImage(steamBody.response.players[0].avatarfull)
             .setTimestamp()
             .setFooter({ text: 'Last Logon ' + moment.unix(steamBody.response.players[0].lastlogoff).format("MM/DD/YYYY") });
-          receivedMessage.channel.send({ embeds: [embed.toJSON() as any] });
+          (receivedMessage.channel as TextChannel).send({ embeds: [embed.toJSON() as any] });
         }).catch((err) => {
           const embed = new EmbedBuilder()
             .setTitle("IGN : " + steamBody.response.players[0].personaname)
@@ -240,13 +246,13 @@ const steamCommand = (args: string[], receivedMessage: Message) => {
             .setImage(steamBody.response.players[0].avatarfull)
             .setTimestamp()
             .setFooter({ text: 'Last Logon ' + moment.unix(steamBody.response.players[0].lastlogoff).format("MM/DD/YYYY") });
-          receivedMessage.channel.send({ embeds: [embed.toJSON() as any] });
+          (receivedMessage.channel as TextChannel).send({ embeds: [embed.toJSON() as any] });
         });
       }).catch(() => {
-        receivedMessage.channel.send("Cannot Retrieve Steam Information");
+        (receivedMessage.channel as TextChannel).send("Cannot Retrieve Steam Information");
       });
     }).catch(() => {
-      receivedMessage.channel.send("Cannot Retrieve Steam ID");
+      (receivedMessage.channel as TextChannel).send("Cannot Retrieve Steam ID");
     });
   }
 };
@@ -305,59 +311,14 @@ const dotaCommand = async (args: string[], receivedMessage: Message) => {
         .setURL(getInfo.profile.profileurl)
         .setFooter({ text: "OpenDota API" });
 
-      receivedMessage.channel.send({ embeds: [embed.toJSON() as any] });
+      (receivedMessage.channel as TextChannel).send({ embeds: [embed.toJSON() as any] });
     } catch (err) {
-      receivedMessage.channel.send("Cannot Retrieve Dota 2 Information");
+      (receivedMessage.channel as TextChannel).send("Cannot Retrieve Dota 2 Information");
     }
   }
 };
 
-const playCommand = async (args: string[], receivedMessage: Message) => {
-  if (!player) return receivedMessage.channel.send("Music player is currently disabled");
-  if (!receivedMessage.member?.voice?.channel) {
-    receivedMessage.channel.send("You are not in a voice channel!");
-    return;
-  }
-  const query = args.join(' ');
-  if (!query) {
-    receivedMessage.channel.send("Please specify a track.");
-    return;
-  }
 
-  try {
-    const { track } = await player.play(receivedMessage.member.voice.channel as any, query, {
-      nodeOptions: {
-        metadata: { channel: receivedMessage.channel },
-        selfDeaf: false
-      },
-      searchEngine: QueryType.AUTO
-    });
-    receivedMessage.channel.send(`Loading track **${track.title}**!`);
-  } catch (e) {
-    receivedMessage.channel.send(`Error playing track: ${e}`);
-  }
-};
 
-const skipCommand = async (receivedMessage: Message) => {
-  if (!player) return receivedMessage.channel.send("Music player is currently disabled");
-  const queue = player.nodes.get(receivedMessage.guildId!);
-  if (!queue || !queue.isPlaying()) {
-    receivedMessage.channel.send("No music is currently playing.");
-    return;
-  }
-  queue.node.skip();
-  receivedMessage.channel.send("Skipped current track.");
-};
-
-const stopCommand = async (receivedMessage: Message) => {
-  if (!player) return receivedMessage.channel.send("Music player is currently disabled");
-  const queue = player.nodes.get(receivedMessage.guildId!);
-  if (!queue || !queue.isPlaying()) {
-    receivedMessage.channel.send("No music is currently playing.");
-    return;
-  }
-  queue.delete();
-  receivedMessage.channel.send("Stopped the player and cleared the queue.");
-};
 
 client.login(CONFIG.DISCORD_BOT_TOKEN);
