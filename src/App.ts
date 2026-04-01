@@ -27,6 +27,28 @@ http.createServer(function (req, res) {
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(data);
     });
+  } else if (req.url === '/terms-of-service' || req.url === '/terms-of-service.html') {
+    const filePath = path.join(__dirname, '../public/terms-of-service.html');
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end("Not found");
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+    });
+  } else if (req.url === '/privacy-policy' || req.url === '/privacy-policy.html') {
+    const filePath = path.join(__dirname, '../public/privacy-policy.html');
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end("Not found");
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+    });
   } else {
     res.writeHead(404);
     res.end("Not found");
