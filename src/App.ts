@@ -13,7 +13,7 @@ import { DefaultExtractors } from '@discord-player/extractor';
 
 import fs = require('fs');
 import path = require('path');
-const swearWords = require('./data/swear-words.json');
+import swearWords from './data/swear-words.json';
 
 // serve static site on port 8080
 http.createServer(function (req, res) {
