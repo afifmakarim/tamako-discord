@@ -13,6 +13,7 @@ import { DefaultExtractors } from '@discord-player/extractor';
 
 import fs = require('fs');
 import path = require('path');
+const swearWords = require('./data/swear-words.json');
 
 // serve static site on port 8080
 http.createServer(function (req, res) {
@@ -94,6 +95,27 @@ client.on('ready', async () => {
 
 client.on('messageCreate', async (receivedMessage: Message) => {
   if (receivedMessage.author.bot) {
+    return;
+  }
+
+  const contentLower = receivedMessage.content.toLowerCase();
+  const containsSwearWord = swearWords.some((word: string) => contentLower.includes(word.toLowerCase()));
+
+  if (containsSwearWord) {
+    const replies = [
+      "Language pls -_-''",
+      "Astaghfirullah '-'",
+      "Watch your language ヽ(ﾟДﾟ)ﾉ",
+      "Dont be rude... be nice to others :)",
+      "-.-",
+      "Please don't use bad words! It's not nice (*>.<*)",
+      "Language, please! We want to keep this a cozy place. 🍵",
+      "Whoa there! No swear words allowed here, okay? 😊",
+      "Ah! Please watch your words... (╥﹏╥)",
+      "Let's be kind to each other and avoid bad words! ✨"
+    ];
+    const randomReply = replies[Math.floor(Math.random() * replies.length)];
+    await receivedMessage.reply(randomReply);
     return;
   }
 
