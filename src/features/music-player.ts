@@ -92,7 +92,8 @@ export const playCommand = async (player: Player | undefined, args: string[], re
             }
           });
         } catch (e) {
-          (receivedMessage.channel as TextChannel).send(`Error playing track: ${e}`);
+          console.error("Error playing track:", e);
+          receivedMessage.reply("Ah! I had a little trouble trying to play that song... 💦 Could you try again?");
         }
       });
 
@@ -103,7 +104,8 @@ export const playCommand = async (player: Player | undefined, args: string[], re
       });
     }
   } catch (e) {
-    (receivedMessage.channel as TextChannel).send(`Error processing request: ${e}`);
+    console.error("Error processing music request:", e);
+    receivedMessage.reply("Oh no! ✨ I got a bit confused while trying to process your request... 😥 Would you mind trying one more time?");
   }
 };
 
